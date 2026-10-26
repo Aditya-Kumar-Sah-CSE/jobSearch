@@ -1,18 +1,24 @@
-# jobhunt
+# jobSearch — AI Job Hunt & Application Assistant
 
-A personal job-search agent. It reads public ATS APIs every morning, throws away
-the ~99% that don't fit you, scores what's left against your resume, drafts an
-application kit for the best few, and emails you a digest.
+A modern personal job-search engine and web dashboard. It scans public ATS APIs (Greenhouse, Lever, Ashby) every morning, filters out non-matching postings, scores candidates against your resume using Google Gemini AI, drafts personalized application kits (custom resume bullets, gap mitigations, cover letters, and interview questions), and delivers a digest to your inbox and local Web Dashboard.
 
-**It never submits an application.** It finds, filters, ranks and drafts. You
-read the digest, edit the cover note, and press submit yourself.
+**It never submits an application.** It finds, filters, ranks and drafts. You read the digest, edit the cover note, and press submit yourself.
 
 ```
-2000 postings  →  40 candidates  →  5 in your inbox
-   fetch          regex/location      LLM screen
-                  /freshness gate     + draft
+2000 postings  →  40 candidates  →  5 in your inbox & Web Dashboard
+   fetch          regex/location      Gemini AI screen
+                  /freshness gate     + tailored kit draft
                   (free, no LLM)
 ```
+
+## Quick Start: Web Dashboard (No Terminal Everyday)
+
+Double-click `start_dashboard.bat` (or run `python server.py`).
+Your browser will automatically open:
+```
+http://localhost:5000
+```
+From the web dashboard you can launch searches with one click, manage company boards, adjust filters, and view application materials.
 
 > **New to Python?** Read **[SETUP.md](SETUP.md)** instead — it's a 13-step guide
 > that assumes you have nothing installed. This README assumes you're comfortable

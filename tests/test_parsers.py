@@ -21,9 +21,40 @@ from jobhunt.fetch import parse_ashby, parse_greenhouse, parse_lever, strip_html
 from jobhunt.mock import fetch_all_mock
 from jobhunt.prefilter import prefilter
 
-CONFIG = yaml.safe_load((Path(__file__).resolve().parent.parent / "config.yaml")
-                        .read_text(encoding="utf-8"))
-FILTERS = CONFIG["filters"]
+REFERENCE_FILTERS = {
+    "include_titles": [
+        r"\b(software|backend|back-end|server|platform|infrastructure|infra|systems|distributed|cloud)\b.*\bengineer\b",
+        r"\bengineer\b.*\b(backend|back-end|platform|infrastructure|infra|systems|distributed)\b",
+        r"\bsde\b",
+        r"\bsde\s*-?\s*(i{1,3}|[123])\b",
+        "software development engineer",
+        "software engineer",
+        "site reliability engineer",
+        r"\bsre\b",
+        "member of technical staff",
+        r"\bnetwork(ing)?\s+(software\s+)?engineer\b",
+        r"\b(kernel|embedded|firmware|driver|packet|dataplane|data plane)\b.*\bengineer\b",
+        r"\bengineer\b.*\b(kernel|packet|dataplane|networking|performance)\b",
+        r"\bperformance engineer\b",
+        r"\bsystems engineer\b",
+        r"\bc\+\+\b.*\bengineer\b",
+        r"\bengineer\b.*\bc\+\+\b",
+    ],
+    "exclude_titles": [
+        r"\b(staff|principal|distinguished|fellow|architect)\b",
+        r"\bsenior\b",
+        r"\b(director|vp|vice president|head of|chief|cto)\b",
+        r"\b(manager|management)\b",
+        r"\b(intern|internship|apprentice|trainee)\b",
+        r"\b(sales|account executive|marketing|recruit|support|success)\b",
+        r"\b(frontend|front-end|ios|android|mobile|game|designer)\b",
+        r"\b(data scientist|machine learning scientist|research scientist)\b",
+    ],
+    "locations": ["bangalore", "bengaluru", "india"],
+    "allow_remote": True,
+    "max_age_days": 30,
+}
+FILTERS = REFERENCE_FILTERS
 
 
 # ------------------------------------------------------------- strip_html ---

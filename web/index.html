@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobHunt AI — Smart Automated Job Search & Application Assistant</title>
+  <meta name="description" content="Automated daily job search assistant powered by Gemini AI. Monitors Greenhouse, Lever, and Ashby boards, filters roles, and drafts personalized application kits.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Nav -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h1>JobHunt <span class="badge-ai">AI</span></h1>
+          <span class="subtitle">Automated Career Engine</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="status-pill" class="status-pill idle">
+          <span class="status-dot"></span>
+          <span id="status-text">Ready</span>
+        </div>
+        <button id="btn-quick-run" class="btn btn-primary" onclick="triggerRun(false)">
+          <span class="icon">▶</span> Run Search
+        </button>
+        <button id="btn-quick-send" class="btn btn-secondary" onclick="triggerRun(true)">
+          <span class="icon">✉</span> Run &amp; Email
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    <!-- Hero / Quick Launch Deck -->
+    <section class="hero-deck">
+      <div class="deck-card run-control-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="deck-icon">🚀</span>
+            <h3>Daily Job Hunt Runner</h3>
+          </div>
+          <span id="last-run-badge" class="time-badge">Last run: Checking...</span>
+        </div>
+        <p class="card-desc">Scan verified tech company job boards, filter for student/intern/fullstack roles, and generate AI-crafted cover notes and resume bullets.</p>
+        
+        <div class="run-options-bar">
+          <div class="option-item">
+            <label for="run-limit">Job Limit:</label>
+            <select id="run-limit" class="custom-select">
+              <option value="10" selected>10 Jobs (Quick test)</option>
+              <option value="20">20 Jobs</option>
+              <option value="50">50 Jobs</option>
+              <option value="">All Candidates</option>
+            </select>
+          </div>
+          <div class="option-item">
+            <label for="run-scorer">AI Scorer:</label>
+            <select id="run-scorer" class="custom-select">
+              <option value="llm" selected>Gemini AI (Smart)</option>
+              <option value="keyword">Keyword (Fast dry-run)</option>
+            </select>
+          </div>
+          <div class="option-item checkbox-item">
+            <label class="toggle-switch">
+              <input type="checkbox" id="run-email" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Mail Digest to Inbox</span>
+          </div>
+          <div class="option-actions">
+            <button id="btn-run-action" class="btn btn-gradient" onclick="triggerRunFromControl()">
+              <span class="btn-spinner" id="btn-spinner"></span>
+              <span id="btn-run-text">⚡ Launch Job Hunt</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">🏢</div>
+          <div class="metric-info">
+            <span class="metric-val" id="metric-companies">15</span>
+            <span class="metric-label">Target Companies</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🔍</div>
+          <div class="metric-info">
+            <span class="metric-val" id="metric-seen">0</span>
+            <span class="metric-label">Jobs Tracked</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">📬</div>
+          <div class="metric-info">
+            <span class="metric-val" id="metric-emailed">0</span>
+            <span class="metric-label">Emailed Digests</span>
+          </div>
+        </div>
+        <div class="metric-card clickable" onclick="openConsole()">
+          <div class="metric-icon">💻</div>
+          <div class="metric-info">
+            <span class="metric-val" id="metric-stage">Idle</span>
+            <span class="metric-label">Live Activity Logs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" onclick="switchTab('digest')" id="tab-btn-digest">
+        <span class="tab-icon">📑</span> Latest Digest
+      </button>
+      <button class="tab-btn" onclick="switchTab('companies')" id="tab-btn-companies">
+        <span class="tab-icon">🏢</span> Companies (<span id="companies-count-tab">15</span>)
+      </button>
+      <button class="tab-btn" onclick="switchTab('filters')" id="tab-btn-filters">
+        <span class="tab-icon">⚙️</span> Filters &amp; Criteria
+      </button>
+      <button class="tab-btn" onclick="switchTab('tracker')" id="tab-btn-tracker">
+        <span class="tab-icon">📊</span> Application Tracker
+      </button>
+    </nav>
+
+    <!-- Tab 1: Latest Digest -->
+    <section id="tab-digest" class="tab-content active">
+      <div class="tab-header-row">
+        <div>
+          <h2>Latest Recommended Matches</h2>
+          <p class="section-subtitle">Tailored roles scored ≥ 7.0 with AI-generated cover letters, fit explanations, and tailored resume bullets.</p>
+        </div>
+        <div class="tab-actions">
+          <button class="btn btn-sm btn-outline" onclick="loadDigest()">🔄 Refresh Digest</button>
+        </div>
+      </div>
+      <div id="digest-container" class="digest-wrapper">
+        <div class="loading-state">
+          <div class="loader"></div>
+          <p>Loading latest matches...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Companies Manager -->
+    <section id="tab-companies" class="tab-content">
+      <div class="tab-header-row">
+        <div>
+          <h2>Target Companies &amp; Job Boards</h2>
+          <p class="section-subtitle">Manage the public Greenhouse, Lever, and Ashby boards scanned during each run.</p>
+        </div>
+        <div class="tab-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAddCompanyModal()">+ Add Company</button>
+          <button class="btn btn-outline btn-sm" onclick="saveCompanies()">💾 Save Changes</button>
+        </div>
+      </div>
+      <div id="companies-grid" class="companies-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Tab 3: Search Filters -->
+    <section id="tab-filters" class="tab-content">
+      <div class="tab-header-row">
+        <div>
+          <h2>Search Criteria &amp; Filter Tuning</h2>
+          <p class="section-subtitle">Fine-tune what positions survive the prefilter before AI tokens are spent.</p>
+        </div>
+        <div class="tab-actions">
+          <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Filters</button>
+        </div>
+      </div>
+      <div class="filters-layout">
+        <div class="filter-card">
+          <h3>🎯 Target Roles &amp; Keywords</h3>
+          <p class="field-hint">One title or regex pattern per line. Postings matching any of these proceed to screening.</p>
+          <textarea id="filter-include-titles" class="custom-textarea" rows="8"></textarea>
+        </div>
+        <div class="filter-card">
+          <h3>🚫 Excluded Keywords</h3>
+          <p class="field-hint">Postings matching any of these patterns will be rejected immediately (e.g. senior/manager/director).</p>
+          <textarea id="filter-exclude-titles" class="custom-textarea" rows="8"></textarea>
+        </div>
+        <div class="filter-card">
+          <h3>📍 Preferred Locations</h3>
+          <p class="field-hint">One city/region per line (e.g. Bangalore, Bengaluru, India).</p>
+          <textarea id="filter-locations" class="custom-textarea" rows="6"></textarea>
+          
+          <div class="toggle-row" style="margin-top:16px;">
+            <label class="toggle-switch">
+              <input type="checkbox" id="filter-allow-remote" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label font-bold">Accept Remote Jobs Worldwide</span>
+          </div>
+        </div>
+        <div class="filter-card">
+          <h3>🎛️ AI Thresholds &amp; Caps</h3>
+          <div class="input-group">
+            <label for="filter-score-threshold">Minimum Match Score (1.0 – 10.0):</label>
+            <div class="range-row">
+              <input type="range" id="filter-score-threshold" min="5.0" max="9.5" step="0.5" value="7.0" oninput="updateScoreVal(this.value)">
+              <span id="score-threshold-val" class="score-pill">7.0</span>
+            </div>
+            <p class="field-hint">Roles scored below this threshold are dropped from drafting and digest.</p>
+          </div>
+
+          <div class="input-group" style="margin-top: 18px;">
+            <label for="filter-max-digest">Max Jobs Per Digest:</label>
+            <input type="number" id="filter-max-digest" class="custom-input" min="1" max="20" value="5">
+            <p class="field-hint">Limits expensive drafting pass to your top matches.</p>
+          </div>
+
+          <div class="input-group" style="margin-top: 18px;">
+            <label for="filter-max-age">Max Age (Days):</label>
+            <input type="number" id="filter-max-age" class="custom-input" min="1" max="180" value="30">
+            <p class="field-hint">Ignores job postings older than this number of days.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Application Tracker -->
+    <section id="tab-tracker" class="tab-content">
+      <div class="tab-header-row">
+        <div>
+          <h2>Job Application Tracker</h2>
+          <p class="section-subtitle">History of all scanned and screened jobs with match scores and status.</p>
+        </div>
+        <div class="tab-actions">
+          <button class="btn btn-outline btn-sm" onclick="loadTracker()">🔄 Refresh</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmResetSeen()">🗑️ Reset Seen History</button>
+        </div>
+      </div>
+      <div class="tracker-table-wrapper">
+        <table class="tracker-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Company</th>
+              <th>Job Title</th>
+              <th>Location</th>
+              <th>First Seen</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tracker-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Live Console Drawer / Modal -->
+  <aside id="console-drawer" class="console-drawer">
+    <div class="console-header">
+      <div class="console-title">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="console-name">Terminal Logs</span>
+        <span id="console-status-badge" class="mini-badge">Idle</span>
+      </div>
+      <div class="console-controls">
+        <label class="autoscroll-label">
+          <input type="checkbox" id="console-autoscroll" checked> Auto-scroll
+        </label>
+        <button class="btn-icon" onclick="clearLogs()" title="Clear logs">🧹</button>
+        <button class="btn-icon" onclick="toggleConsole()" title="Close console">✕</button>
+      </div>
+    </div>
+    <div id="console-body" class="console-body">
+      <div class="log-line text-muted">[System] Ready. Click 'Launch Job Hunt' above to begin.</div>
+    </div>
+  </aside>
+
+  <!-- Add Company Modal -->
+  <div id="modal-add-company" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Target Company</h3>
+        <button class="btn-icon" onclick="closeAddCompanyModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="new-comp-name">Company Name:</label>
+          <input type="text" id="new-comp-name" class="custom-input" placeholder="e.g. Supabase">
+        </div>
+        <div class="input-group">
+          <label for="new-comp-ats">ATS Platform:</label>
+          <select id="new-comp-ats" class="custom-select">
+            <option value="greenhouse">Greenhouse (boards.greenhouse.io)</option>
+            <option value="ashby">Ashby (jobs.ashbyhq.com)</option>
+            <option value="lever">Lever (jobs.lever.co)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="new-comp-slug">ATS Slug / Board ID:</label>
+          <input type="text" id="new-comp-slug" class="custom-input" placeholder="e.g. supabase">
+          <p class="field-hint">The board identifier at the end of the careers URL.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAddCompanyModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddCompany()">Add Company</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
